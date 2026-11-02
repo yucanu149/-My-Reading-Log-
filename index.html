@@ -1,0 +1,2344 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>私の読書記録 — My Reading Log</title>
+    <!-- Google Fonts: Noto Sans JP & Noto Serif JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind CSS CDN (for instant browser execution without build step) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Noto Sans JP"', '"Hiragino Kaku Gothic ProN"', '"Yu Gothic"', 'sans-serif'],
+              serif: ['"Noto Serif JP"', '"Shippori Mincho"', '"Hiragino Mincho ProN"', '"Yu Mincho"', 'serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+        background-color: #F6F4F0;
+        color: #292524;
+      }
+      .font-serif {
+        font-family: 'Noto Serif JP', 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+      }
+    </style>
+    <!-- React 18 & Babel Standalone -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="bg-[#F6F4F0] text-stone-800 antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useMemo, useRef } = React;
+
+      /* --- Lucide Icon Components --- */
+      const IconBase = ({ children, className = 'w-4 h-4' }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          {children}
+        </svg>
+      );
+
+      const BookOpen = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </IconBase>
+      );
+      const Plus = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </IconBase>
+      );
+      const Search = ({ className }) => (
+        <IconBase className={className}>
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </IconBase>
+      );
+      const Tag = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+          <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+        </IconBase>
+      );
+      const Calendar = ({ className }) => (
+        <IconBase className={className}>
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+          <line x1="16" x2="16" y1="2" y2="6" />
+          <line x1="8" x2="8" y1="2" y2="6" />
+          <line x1="3" x2="21" y1="10" y2="10" />
+        </IconBase>
+      );
+      const Compass = ({ className }) => (
+        <IconBase className={className}>
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        </IconBase>
+      );
+      const Sparkles = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+          <path d="M20 3v4" />
+          <path d="M22 5h-4" />
+        </IconBase>
+      );
+      const RotateCcw = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+          <path d="M3 3v5h5" />
+        </IconBase>
+      );
+      const X = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </IconBase>
+      );
+      const RefreshCw = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+          <path d="M8 16H3v5" />
+        </IconBase>
+      );
+      const Quote = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" />
+          <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" />
+        </IconBase>
+      );
+      const Lightbulb = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+          <path d="M9 18h6" />
+          <path d="M10 22h4" />
+        </IconBase>
+      );
+      const ArrowUpRight = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M7 7h10v10" />
+          <path d="M7 17 17 7" />
+        </IconBase>
+      );
+      const Check = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M20 6 9 17l-5-5" />
+        </IconBase>
+      );
+      const ChevronDown = ({ className }) => (
+        <IconBase className={className}>
+          <path d="m6 9 6 6 6-6" />
+        </IconBase>
+      );
+      const ChevronUp = ({ className }) => (
+        <IconBase className={className}>
+          <path d="m18 15-6-6-6 6" />
+        </IconBase>
+      );
+      const HelpCircle = ({ className }) => (
+        <IconBase className={className}>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <path d="M12 17h.01" />
+        </IconBase>
+      );
+      const FileText = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+          <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+          <path d="M10 9H8" />
+          <path d="M16 13H8" />
+          <path d="M16 17H8" />
+        </IconBase>
+      );
+      const Scale = ({ className }) => (
+        <IconBase className={className}>
+          <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+          <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+          <path d="M7 21h10" />
+          <path d="M12 3v18" />
+          <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+        </IconBase>
+      );
+      const CheckCircle2 = ({ className }) => (
+        <IconBase className={className}>
+          <circle cx="12" cy="12" r="10" />
+          <path d="m9 12 2 2 4-4" />
+        </IconBase>
+      );
+      const Edit3 = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </IconBase>
+      );
+      const Trash2 = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+          <line x1="10" x2="10" y1="11" y2="17" />
+          <line x1="14" x2="14" y1="11" y2="17" />
+        </IconBase>
+      );
+      const Upload = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" x2="12" y1="3" y2="15" />
+        </IconBase>
+      );
+      const ImagePlus = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
+          <line x1="16" x2="22" y1="5" y2="5" />
+          <line x1="19" x2="19" y1="2" y2="8" />
+          <circle cx="9" cy="9" r="2" />
+          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+        </IconBase>
+      );
+      const MessageSquareQuote = ({ className }) => (
+        <IconBase className={className}>
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <path d="M8 12a2 2 0 0 0 2-2V8H8" />
+          <path d="M14 12a2 2 0 0 0 2-2V8h-2" />
+        </IconBase>
+      );
+
+      /* --- Constants & Initial Data --- */
+      const STORAGE_KEY = 'my_reading_log_books_v1';
+
+      const PRESET_TAGS = [
+        '思考法',
+        'ビジネス',
+        '習慣化',
+        '哲学',
+        'エッセイ',
+        '小説',
+        '科学',
+        '心理',
+        '歴史',
+        'デザイン'
+      ];
+
+      const INITIAL_BOOKS = [
+        {
+          id: 'book-sample-1',
+          title: '思考の整理学',
+          author: '外山 滋比古',
+          publishedDate: '1986-04-24',
+          pageCount: '218',
+          readDate: '2026-10-18',
+          status: '読了',
+          tags: ['思考法', 'エッセイ', '知的生産'],
+          coverUrl: '',
+          preQuestion:
+            '日々インプットする情報量は増えているのに、自分ならではの独創的なアイデアや深い洞察に結びつかないのはなぜか？知識を「借り物」から「自分の血肉」に変える思考習慣を持ち帰りたい。',
+          summary:
+            '知識をただ詰め込む「グライダー型人間」から脱却し、自力で飛ぶ「飛行機型人間」になるための知的生産術。アイデアを寝かせて発酵させる「時の試練」と忘却の効用を説く名著。',
+          quotes: [
+            {
+              page: 'p.48',
+              quote:
+                '朝飯前という言葉がある。朝のうちは頭がすっきりしていて、夜のあいだに無意識のうちに考えがまとまっているため、前の晩にはどうしても解けなかった問題が、あっけないほど簡単に片づいてしまう。',
+              thought:
+                'これまで「考え抜く＝机の前で長時間うなり続けること」だと思い込んでいた。しかし実際に行き詰まったときほど、無理に結論を出そうとして凡庸なまとめに落ち着いてしまう。意識的に「一晩寝かせる」余白をスケジュールに組み込むことこそ思考を深める技術なのだと腑に落ちた。'
+            },
+            {
+              page: 'p.162',
+              quote:
+                '忘却は、人間の頭脳が新しい創造活動をするためにどうしても必要な作用である。忘れられない頭は、ガラクタがいっぱい詰まった倉庫のようなもので、動きがとれない。',
+              thought:
+                '読書しても「すべて記憶しなければ」と気負っていたが、むしろ不要な細部を忘れることで本当に大切な骨格（エッセンス）だけが純化されて残るという視点に救われた。メモに残したら安心して一度忘れるくらいの軽やかさでいい。'
+            }
+          ],
+          overallReview:
+            '刊行から40年近く経つにもかかわらず、情報過多の現代にこそ一層輝く知的生産のバイブルだった。ネット検索やAIで「グライダー的」な正解が1秒で手に入る時代だからこそ、時間をかけて自分の頭の中で異質な知識同士を衝突・発酵させるプロセスがそのまま個人の独創性になる。単なるノウハウ本ではなく、自分の頭で考えることの喜びを静かに思い出させてくれる一冊。',
+          critique:
+            '本書の「寝かせる・忘れる」アプローチは、十分な基礎知識や問題意識がすでに頭の中にあることが前提になっているのではないか。インプット自体が浅い段階でただ放置しても発酵は起きないため、納期が短い実務では「最初の徹底的な情報収集」と「意図的な放置期間」を明確に区切る工夫が必要だと感じる。',
+          actionPlan:
+            '企画書や重要な文章を書くときは、必ず「初日に骨子と材料だけ書き出して閉じ、翌朝一番の30分で一気に構成を仕上げる」2段階プロセスを毎週の業務で実践する。',
+          actionReview:
+            '先週のプロジェクト提案書で実践。夜に無理やり仕上げるのをやめて翌朝見直したところ、不要な論点が3つ削ぎ落とされ、核心だけのシンプルな構成になった。上司からも「論旨が明快」と好評だった。',
+          essence: '思考は詰め込むものではなく、時間をかけて発酵させるもの。',
+          createdAt: '2026-10-18T09:30:00.000Z',
+          updatedAt: '2026-10-25T21:15:00.000Z'
+        },
+        {
+          id: 'book-sample-2',
+          title: 'ジェームズ・クリアー式 複利で伸びる1つの習慣 (Atomic Habits)',
+          author: 'ジェームズ・クリアー',
+          publishedDate: '2019-08-29',
+          pageCount: '336',
+          readDate: '2026-10-28',
+          status: '読了',
+          tags: ['習慣化', 'ビジネス', '心理'],
+          coverUrl: '',
+          preQuestion:
+            '読書や運動など「やったほうがいいと分かっている習慣」が忙しくなると途切れてしまう。意志の力やモチベーションに頼らず、自然に行動が続く仕組みの作り方を学びたい。',
+          summary:
+            '毎日1%の改善が1年後には37倍の成果を生む「習慣の複利効果」を解説。目標ではなく「システム（仕組み）」と「アイデンティティ（なりたい自分）」から行動を設計する実践論。',
+          quotes: [
+            {
+              page: 'p.204',
+              quote:
+                '新しい習慣を身につけるとき、最初は2分以内でできることに縮小しなさい。「毎晩寝る前に本を読む」は「1ページだけ読む」になる。まず始める儀式を確立しなければ、改善することはできない。',
+              thought:
+                '「毎日30分読書する」「1冊完璧にまとめる」と高いハードルを設定していたからこそ、疲れた日にゼロになっていたことに気づいた。まずは「本を開いて1行読む」「読書記録アプリを開いて1文だけメモする」という2分ルールに落とせば、忙しい日でも連鎖が途切れない。'
+            },
+            {
+              page: 'p.56',
+              quote:
+                '真の行動変化とは、アイデンティティの変化である。目標は「本を読むこと」ではなく「読書家になること」だ。あなたが取る一つひとつの行動は、なりたい自分への一票である。',
+              thought:
+                '結果目標（年間何冊読むか）ばかり追いかけると達成した瞬間に燃え尽きてしまうが、「自分は本から思考を深めて行動に移す人間だ」という自己認識を育てるために今日1ページ読む、と捉え直すと毎日の小さな行動に誇りが持てる。'
+            }
+          ],
+          overallReview:
+            '精神論や根性論を徹底的に排し、人間の行動を「きっかけ・欲求・反応・報酬」の4ステップのループとして工学的に分解している点が非常に実践的だった。良い習慣を作るには摩擦を減らし、悪い習慣を断つには摩擦を増やすという環境設計の考え方は、仕事にも私生活にもすぐに応用できる。',
+          critique:
+            '「2分ルール」は習慣の起動には極めて有効だが、2分のままで満足してしまい、本来の深い集中（ディープワーク）に移行できないリスクもある。「ゼロにしないための最低ライン（2分）」と「余裕がある日の標準ライン（25分）」の二段構えで運用するのが現実的ではないか。',
+          actionPlan:
+            '毎晩22時にお茶を淹れたら、ソファに座る前にダイニングテーブルに置いてある本を1ページだけ開き、気になった言葉を1つこの「私の読書記録」に入力する。',
+          actionReview:
+            '5日間連続で継続中。最初は1ページだけのつもりでも、開くとそのまま15分ほど読み進める日が4日あった。「まず開く」摩擦を減らすだけでここまで変わるとは驚き。',
+          essence: '意志の力に頼らず、最初の2分の摩擦を極限まで減らす。',
+          createdAt: '2026-10-28T20:00:00.000Z',
+          updatedAt: '2026-11-01T22:10:00.000Z'
+        },
+        {
+          id: 'book-sample-3',
+          title: 'ファスト＆スロー あなたの意思決定はなぜ間違えるのか',
+          author: 'ダニエル・カーネマン',
+          publishedDate: '2014-06-20',
+          pageCount: '432',
+          readDate: '2026-11-01',
+          status: '読書中',
+          tags: ['心理', '思考法', '科学'],
+          coverUrl: '',
+          preQuestion:
+            '仕事や日常の判断で、直感に頼って後悔することがある。人間の脳が持つ認知バイアスのクセを知り、重要な局面で客観的な判断を下せるようになりたい。',
+          summary:
+            '直感的で素早い「システム1」と、論理的で熟考する「システム2」の二重過程理論から、人間がいかに錯覚やバイアスに陥りやすいかを行動経済学の視点で解き明かす一冊。',
+          quotes: [
+            {
+              page: 'p.136',
+              quote:
+                'あなたが見ているものがすべてだ（WYSIATI: What You See Is All There Is）。システム1は手元にある断片的な情報だけで、もっともらしい一貫した物語を瞬時に作り上げてしまう。',
+              thought:
+                '会議で誰かの報告を聞いたとき、そこに含まれていない「見えていないデータ（沈黙している証拠）」を問う前に、提示された数字だけで納得してしまう場面が多々あった。「今ここに見えていない前提条件は何か？」とシステム2を意図的に起動するトリガーが必要だと痛感した。'
+            }
+          ],
+          overallReview:
+            '現在上巻を読書中だが、すでに自分の日常の意思決定がいかに「システム1の短絡的なストーリー作り」に支配されていたかを思い知らされている。知識としてバイアスを知るだけでなく、組織や個人の判断プロセスにどう歯止めを組み込むかを考えながら下巻も読み進めたい。',
+          critique:
+            'すべての日常判断でシステム2をフル稼働させると認知コストが高すぎて疲弊してしまう。どんな意思決定にシステム2を投入すべきかという「判断の優先順位付け（トリアージ）」の基準を自分なりに設ける必要がある。',
+          actionPlan:
+            '重要な意思決定や高額な買い物、プロジェクトの方針決定の前に、ノートに「今見えている情報以外の反証可能性は何か？」を3つ書き出すチェックリストを作る。',
+          actionReview:
+            '現在上巻を読書中。来週の企画レビュー会議でチェックリストを試験導入してみる予定。',
+          essence: '直感が作る「もっともらしい物語」を疑い、見えない情報を問う。',
+          createdAt: '2026-11-01T14:20:00.000Z',
+          updatedAt: '2026-11-02T08:45:00.000Z'
+        },
+        {
+          id: 'book-sample-4',
+          title: '星を継ぐもの',
+          author: 'ジェイムズ・P・ホーガン',
+          publishedDate: '1980-05-23',
+          pageCount: '324',
+          readDate: '2026-11-02',
+          status: '読みたい',
+          tags: ['小説', '科学', '思考法'],
+          coverUrl: '',
+          preQuestion:
+            '月面で発見された5万年前の人間の遺体という謎に対し、科学者たちがどのように仮説を立て、反証し、真実に迫っていくのか。ハードSFの傑作を楽しみながら科学的思考のプロセスを味わいたい。',
+          summary:
+            '月面で真紅の宇宙服を着た5万年前の人類の遺体が発見される。矛盾する数々の観測事実を前に、各分野の科学者たちが既成概念を乗り越えて壮大な仮説を検証していくハードSFミステリー。',
+          quotes: [],
+          overallReview: '',
+          critique: '',
+          actionPlan:
+            '今週末の土曜午前、カフェでスマートフォンを機内モードにして第1章からじっくり読み始める。',
+          actionReview: '',
+          essence: '',
+          createdAt: '2026-11-02T10:00:00.000Z',
+          updatedAt: '2026-11-02T10:00:00.000Z'
+        }
+      ];
+
+      function normalizeBook(rawBook) {
+        if (!rawBook || typeof rawBook !== 'object') return null;
+
+        const sampleMatch = INITIAL_BOOKS.find((s) => s.id === rawBook.id);
+
+        let quotes = [];
+        if (Array.isArray(rawBook.quotes)) {
+          quotes = rawBook.quotes
+            .filter((q) => q && typeof q === 'object')
+            .map((q) => ({
+              page: typeof q.page === 'string' ? q.page.trim() : '',
+              quote: typeof q.quote === 'string' ? q.quote.trim() : '',
+              thought: typeof q.thought === 'string' ? q.thought.trim() : ''
+            }))
+            .filter((q) => q.page !== '' || q.quote !== '' || q.thought !== '');
+        } else {
+          const legacyPage =
+            typeof rawBook.favoritePage === 'string' ? rawBook.favoritePage.trim() : '';
+          const legacyQuote =
+            typeof rawBook.favoriteQuote === 'string' ? rawBook.favoriteQuote.trim() : '';
+          const legacyThought =
+            typeof rawBook.myThoughts === 'string' ? rawBook.myThoughts.trim() : '';
+
+          if (
+            sampleMatch &&
+            sampleMatch.quotes.length > 0 &&
+            sampleMatch.quotes[0].quote === legacyQuote
+          ) {
+            quotes = sampleMatch.quotes;
+          } else if (legacyPage || legacyQuote || legacyThought) {
+            quotes = [{ page: legacyPage, quote: legacyQuote, thought: legacyThought }];
+          }
+        }
+
+        let overallReview =
+          typeof rawBook.overallReview === 'string' ? rawBook.overallReview : '';
+        if (!overallReview && sampleMatch && sampleMatch.overallReview) {
+          overallReview = sampleMatch.overallReview;
+        }
+
+        return {
+          ...rawBook,
+          tags: Array.isArray(rawBook.tags) ? rawBook.tags : [],
+          quotes,
+          overallReview,
+          favoritePage: (quotes[0] && quotes[0].page) || '',
+          favoriteQuote: (quotes[0] && quotes[0].quote) || '',
+          myThoughts: (quotes[0] && quotes[0].thought) || ''
+        };
+      }
+
+      /* --- BookCover Component --- */
+      const PALETTES = [
+        {
+          bg: 'bg-gradient-to-br from-stone-800 via-stone-700 to-stone-900',
+          border: 'border-stone-600/40',
+          accent: 'text-amber-300/90',
+          text: 'text-stone-100',
+          sub: 'text-stone-300'
+        },
+        {
+          bg: 'bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900',
+          border: 'border-slate-600/40',
+          accent: 'text-amber-200/90',
+          text: 'text-slate-100',
+          sub: 'text-slate-300'
+        },
+        {
+          bg: 'bg-gradient-to-br from-amber-950 via-stone-800 to-stone-900',
+          border: 'border-amber-700/30',
+          accent: 'text-amber-300/90',
+          text: 'text-amber-50',
+          sub: 'text-amber-200/80'
+        },
+        {
+          bg: 'bg-gradient-to-br from-indigo-950 via-slate-800 to-slate-900',
+          border: 'border-indigo-700/30',
+          accent: 'text-indigo-200/90',
+          text: 'text-indigo-50',
+          sub: 'text-indigo-200/80'
+        }
+      ];
+
+      function getPaletteIndex(title = '') {
+        let sum = 0;
+        for (let i = 0; i < title.length; i++) {
+          sum += title.charCodeAt(i);
+        }
+        return sum % PALETTES.length;
+      }
+
+      function BookCover({ title, author, coverUrl, className = 'w-24 h-36', size = 'md' }) {
+        const [imgError, setImgError] = useState(false);
+
+        useEffect(() => {
+          setImgError(false);
+        }, [coverUrl]);
+
+        const palette = PALETTES[getPaletteIndex(title)];
+
+        if (coverUrl && coverUrl.trim() !== '' && !imgError) {
+          return (
+            <div
+              className={`relative overflow-hidden rounded-r-md rounded-l-[3px] shadow-sm border border-stone-300/80 bg-stone-200 shrink-0 select-none ${className}`}
+            >
+              <img
+                src={coverUrl}
+                alt={title || '書籍カバー'}
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover object-center"
+                loading="lazy"
+              />
+              <div className="absolute inset-y-0 left-0 w-2.5 bg-gradient-to-r from-black/35 via-white/15 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 ring-1 ring-inset ring-black/10 pointer-events-none" />
+            </div>
+          );
+        }
+
+        return (
+          <div
+            className={`relative overflow-hidden rounded-r-md rounded-l-[3px] shadow-sm border ${palette.bg} ${palette.border} shrink-0 flex flex-col justify-between p-2.5 select-none ${className}`}
+            aria-label={`${title || '無題'} の書影プレースホルダー`}
+          >
+            <div className="absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-black/40 via-white/10 to-transparent pointer-events-none" />
+            <div className="absolute inset-1.5 border border-white/10 rounded-sm pointer-events-none" />
+
+            <div className="relative z-10 flex items-center justify-between">
+              <span className={`text-[9px] tracking-widest uppercase font-mono opacity-75 ${palette.accent}`}>
+                EX LIBRIS
+              </span>
+              <BookOpen className={`w-3 h-3 opacity-60 ${palette.accent}`} />
+            </div>
+
+            <div className="relative z-10 my-auto py-1 pl-1">
+              <p
+                className={`font-serif font-semibold leading-snug line-clamp-3 break-words ${palette.text} ${
+                  size === 'lg' ? 'text-sm' : size === 'sm' ? 'text-[10px]' : 'text-xs'
+                }`}
+              >
+                {title || 'Untitled Book'}
+              </p>
+            </div>
+
+            <div className="relative z-10 pl-1 border-t border-white/10 pt-1">
+              <p className={`text-[10px] truncate ${palette.sub}`}>
+                {author || '著者未設定'}
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      /* --- DailyHighlight Component --- */
+      function DailyHighlight({ books, onSelectBook }) {
+        const highlights = useMemo(() => {
+          const list = [];
+          books.forEach((rawBook) => {
+            const book = normalizeBook(rawBook);
+            if (!book) return;
+            const bookQuotes = Array.isArray(book.quotes) ? book.quotes : [];
+            bookQuotes.forEach((item, idx) => {
+              if (item.quote && item.quote.trim() !== '') {
+                list.push({
+                  id: `${book.id}-quote-${idx}`,
+                  bookId: book.id,
+                  quote: item.quote.trim(),
+                  thought: item.thought ? item.thought.trim() : '',
+                  page: item.page ? item.page.trim() : '',
+                  title: book.title,
+                  author: book.author,
+                  book
+                });
+              }
+            });
+          });
+          return list;
+        }, [books]);
+
+        const [currentIndex, setCurrentIndex] = useState(0);
+        const [isSpinning, setIsSpinning] = useState(false);
+
+        useEffect(() => {
+          if (highlights.length > 0) {
+            setCurrentIndex(Math.floor(Math.random() * highlights.length));
+          }
+        }, [highlights.length]);
+
+        if (highlights.length === 0) {
+          return (
+            <section className="mb-8 rounded-2xl border border-stone-200/90 bg-gradient-to-br from-stone-50 via-amber-50/30 to-stone-100/80 p-6 shadow-sm">
+              <div className="flex items-center gap-2 text-amber-800 text-xs font-medium tracking-wider uppercase mb-2">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>本日のハイライト（デイリー復習カード）</span>
+              </div>
+              <p className="text-stone-600 text-sm leading-relaxed">
+                まだ「好きな文章」が登録されていません。本を記録すると、複数登録した好きな文章の中からランダムに1つがここに表示され、日々の思考と行動の振り返りに役立ちます。
+              </p>
+            </section>
+          );
+        }
+
+        const current = highlights[currentIndex % highlights.length] || highlights[0];
+
+        const handleReshuffle = () => {
+          setIsSpinning(true);
+          setTimeout(() => setIsSpinning(false), 350);
+          if (highlights.length <= 1) return;
+          let next = Math.floor(Math.random() * highlights.length);
+          if (next === currentIndex % highlights.length) {
+            next = (currentIndex + 1) % highlights.length;
+          }
+          setCurrentIndex(next);
+        };
+
+        return (
+          <section
+            aria-label="本日のハイライト"
+            className="mb-8 relative overflow-hidden rounded-2xl border border-stone-200/90 bg-gradient-to-br from-[#FAF8F5] via-[#FDFBF7] to-amber-50/40 p-6 sm:p-7 shadow-sm transition-all"
+          >
+            <Quote className="w-28 h-28 text-stone-200/50 absolute -right-3 -bottom-4 pointer-events-none select-none rotate-6" />
+
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100/80 text-amber-900 border border-amber-200/70">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                  本日のハイライト
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-700 border border-stone-200">
+                  <Quote className="w-3 h-3 text-stone-500" />
+                  好きな文章（全 {highlights.length} 件から抽選）
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleReshuffle}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-700 bg-white/90 hover:bg-stone-100 border border-stone-200/90 shadow-xs transition cursor-pointer active:scale-95"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 text-stone-500 transition-transform duration-300 ${
+                    isSpinning ? 'rotate-180' : ''
+                  }`}
+                />
+                別のフレーズを見る
+              </button>
+            </div>
+
+            <blockquote className="relative z-10 my-3 pl-4 border-l-2 border-amber-600/70">
+              <p className="font-serif font-semibold text-base sm:text-lg text-stone-800 leading-relaxed tracking-wide">
+                「{current.quote}」
+              </p>
+            </blockquote>
+
+            {current.thought && (
+              <div className="relative z-10 mt-3 rounded-xl bg-white/80 border border-stone-200/70 px-4 py-2.5 flex items-start gap-2.5">
+                <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed line-clamp-2">
+                  {current.thought}
+                </p>
+              </div>
+            )}
+
+            <div className="relative z-10 mt-4 pt-3 border-t border-stone-200/60 flex flex-wrap items-center justify-between gap-2 text-xs text-stone-600">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="font-medium text-stone-800 font-serif">『{current.title}』</span>
+                {current.author && <span className="text-stone-500">/ {current.author}</span>}
+                {current.page && (
+                  <span className="px-2 py-0.5 rounded bg-amber-100/80 text-amber-900 border border-amber-200/80 font-mono text-[11px]">
+                    {current.page}
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onSelectBook(current.book)}
+                className="inline-flex items-center gap-1 text-amber-800 hover:text-amber-950 font-medium underline-offset-4 hover:underline cursor-pointer"
+              >
+                <span>この読書ノートを開く</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </section>
+        );
+      }
+
+      /* --- BookFormModal Component --- */
+      function getTodayStr() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+
+      function createEmptyQuoteSet() {
+        return { page: '', quote: '', thought: '' };
+      }
+
+      function readImageAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
+          reader.onload = (e) => {
+            const rawDataUrl = e.target.result;
+            const img = new Image();
+            img.onload = () => {
+              const MAX_WIDTH = 600;
+              const MAX_HEIGHT = 900;
+              let { width, height } = img;
+
+              if (width <= MAX_WIDTH && height <= MAX_HEIGHT && file.size <= 350 * 1024) {
+                resolve(rawDataUrl);
+                return;
+              }
+
+              const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height, 1);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.84);
+                resolve(compressedDataUrl || rawDataUrl);
+              } catch (err) {
+                resolve(rawDataUrl);
+              }
+            };
+            img.onerror = () => resolve(rawDataUrl);
+            img.src = rawDataUrl;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function BookFormModal({ isOpen, onClose, onSave, initialData }) {
+        const isEditing = Boolean(initialData && initialData.id);
+        const fileInputRef = useRef(null);
+
+        const [title, setTitle] = useState('');
+        const [author, setAuthor] = useState('');
+        const [publishedDate, setPublishedDate] = useState('');
+        const [pageCount, setPageCount] = useState('');
+        const [readDate, setReadDate] = useState(getTodayStr());
+        const [status, setStatus] = useState('読了');
+        const [tagsInput, setTagsInput] = useState('');
+        const [coverUrl, setCoverUrl] = useState('');
+
+        const [preQuestion, setPreQuestion] = useState('');
+        const [summary, setSummary] = useState('');
+        const [quotes, setQuotes] = useState([createEmptyQuoteSet()]);
+        const [overallReview, setOverallReview] = useState('');
+        const [critique, setCritique] = useState('');
+        const [actionPlan, setActionPlan] = useState('');
+        const [actionReview, setActionReview] = useState('');
+        const [essence, setEssence] = useState('');
+
+        const [isEssenceOpen, setIsEssenceOpen] = useState(false);
+        const [titleError, setTitleError] = useState('');
+        const [imageError, setImageError] = useState('');
+        const [isDragging, setIsDragging] = useState(false);
+
+        useEffect(() => {
+          if (!isOpen) return;
+          setTitleError('');
+          setImageError('');
+          setIsDragging(false);
+
+          if (initialData) {
+            const normalized = normalizeBook(initialData);
+            setTitle(normalized.title || '');
+            setAuthor(normalized.author || '');
+            setPublishedDate(normalized.publishedDate || '');
+            setPageCount(normalized.pageCount ? String(normalized.pageCount) : '');
+            setReadDate(normalized.readDate || getTodayStr());
+            setStatus(normalized.status || '読了');
+            setTagsInput(Array.isArray(normalized.tags) ? normalized.tags.join(', ') : '');
+            setCoverUrl(normalized.coverUrl || '');
+            setPreQuestion(normalized.preQuestion || '');
+            setSummary(normalized.summary || '');
+            setQuotes(
+              Array.isArray(normalized.quotes) && normalized.quotes.length > 0
+                ? normalized.quotes.map((q) => ({
+                    page: q.page || '',
+                    quote: q.quote || '',
+                    thought: q.thought || ''
+                  }))
+                : [createEmptyQuoteSet()]
+            );
+            setOverallReview(normalized.overallReview || '');
+            setCritique(normalized.critique || '');
+            setActionPlan(normalized.actionPlan || '');
+            setActionReview(normalized.actionReview || '');
+            setEssence(normalized.essence || '');
+            setIsEssenceOpen(Boolean(normalized.essence && normalized.essence.trim() !== ''));
+          } else {
+            setTitle('');
+            setAuthor('');
+            setPublishedDate('');
+            setPageCount('');
+            setReadDate(getTodayStr());
+            setStatus('読了');
+            setTagsInput('');
+            setCoverUrl('');
+            setPreQuestion('');
+            setSummary('');
+            setQuotes([createEmptyQuoteSet()]);
+            setOverallReview('');
+            setCritique('');
+            setActionPlan('');
+            setActionReview('');
+            setEssence('');
+            setIsEssenceOpen(false);
+          }
+        }, [isOpen, initialData]);
+
+        if (!isOpen) return null;
+
+        const parsedTags = tagsInput
+          .split(/[,、\s]+/)
+          .map((t) => t.trim())
+          .filter(Boolean);
+
+        const handleTogglePresetTag = (tag) => {
+          if (parsedTags.includes(tag)) {
+            const next = parsedTags.filter((t) => t !== tag);
+            setTagsInput(next.join(', '));
+          } else {
+            const next = [...parsedTags, tag];
+            setTagsInput(next.join(', '));
+          }
+        };
+
+        const handleQuoteChange = (index, field, value) => {
+          setQuotes((prev) =>
+            prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+          );
+        };
+
+        const handleAddQuoteSet = () => {
+          setQuotes((prev) => [...prev, createEmptyQuoteSet()]);
+        };
+
+        const handleRemoveQuoteSet = (index) => {
+          setQuotes((prev) => {
+            if (prev.length <= 1) return prev;
+            return prev.filter((_, i) => i !== index);
+          });
+        };
+
+        const processSelectedFile = async (file) => {
+          if (!file) return;
+          if (!file.type || !file.type.startsWith('image/')) {
+            setImageError('画像ファイル（JPG / PNG / WebP / HEIC 等）を選択してください。');
+            return;
+          }
+          setImageError('');
+          try {
+            const dataUrl = await readImageAsDataUrl(file);
+            setCoverUrl(dataUrl);
+          } catch (err) {
+            setImageError('画像の読み込みに失敗しました。別の画像をお試しください。');
+          }
+        };
+
+        const handleFileChange = (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (file) {
+            processSelectedFile(file);
+          }
+          e.target.value = '';
+        };
+
+        const handleDragOver = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragging(true);
+        };
+
+        const handleDragLeave = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragging(false);
+        };
+
+        const handleDrop = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragging(false);
+          const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (file) {
+            processSelectedFile(file);
+          }
+        };
+
+        const handleClearImage = () => {
+          setCoverUrl('');
+          setImageError('');
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        };
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (!title.trim()) {
+            setTitleError('タイトルを入力してください');
+            return;
+          }
+
+          const uniqueTags = Array.from(
+            new Set(
+              tagsInput
+                .split(/[,、]+/)
+                .map((t) => t.trim())
+                .filter(Boolean)
+            )
+          );
+
+          const cleanedQuotes = quotes
+            .map((q) => ({
+              page: (q.page || '').trim(),
+              quote: (q.quote || '').trim(),
+              thought: (q.thought || '').trim()
+            }))
+            .filter((q) => q.page !== '' || q.quote !== '' || q.thought !== '');
+
+          const nowIso = new Date().toISOString();
+          const record = {
+            id:
+              (initialData && initialData.id) ||
+              `book-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            title: title.trim(),
+            author: author.trim(),
+            publishedDate: publishedDate.trim(),
+            pageCount: pageCount.trim(),
+            readDate: readDate || getTodayStr(),
+            status,
+            tags: uniqueTags,
+            coverUrl: coverUrl.trim(),
+            preQuestion: preQuestion.trim(),
+            summary: summary.trim(),
+            quotes: cleanedQuotes,
+            overallReview: overallReview.trim(),
+            favoritePage: (cleanedQuotes[0] && cleanedQuotes[0].page) || '',
+            favoriteQuote: (cleanedQuotes[0] && cleanedQuotes[0].quote) || '',
+            myThoughts: (cleanedQuotes[0] && cleanedQuotes[0].thought) || '',
+            critique: critique.trim(),
+            actionPlan: actionPlan.trim(),
+            actionReview: actionReview.trim(),
+            essence: essence.trim(),
+            createdAt: (initialData && initialData.createdAt) || nowIso,
+            updatedAt: nowIso
+          };
+
+          onSave(record);
+        };
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-form-title"
+          >
+            <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-[#FAF8F5] border border-stone-200 shadow-2xl overflow-hidden my-auto">
+              <div className="flex items-center justify-between px-6 py-4 bg-white/90 border-b border-stone-200/80">
+                <div>
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-amber-800">
+                    {isEditing ? 'EDIT READING LOG' : 'NEW READING LOG'}
+                  </span>
+                  <h2
+                    id="modal-form-title"
+                    className="text-lg sm:text-xl font-serif font-bold text-stone-900"
+                  >
+                    {isEditing ? '読書記録を編集する' : '新しい本を記録する'}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-2 rounded-full text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition cursor-pointer"
+                  aria-label="閉じる"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="overflow-y-auto p-5 sm:p-7 space-y-8">
+                {/* ① 本の情報 */}
+                <section className="bg-white rounded-xl border border-stone-200/90 p-5 sm:p-6 shadow-sm space-y-5">
+                  <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-800 text-stone-50 text-xs font-bold">
+                      1
+                    </span>
+                    <BookOpen className="w-4 h-4 text-amber-700" />
+                    <h3 className="font-serif font-bold text-stone-800 text-base">本の情報</h3>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="w-full md:w-52 shrink-0 flex flex-col items-center">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+
+                      <div
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                        className={`w-full rounded-xl border-2 border-dashed p-3.5 flex flex-col items-center justify-center text-center transition cursor-pointer ${
+                          isDragging
+                            ? 'border-amber-600 bg-amber-50/70'
+                            : 'border-stone-300 hover:border-amber-700/70 bg-stone-50/60 hover:bg-stone-100/60'
+                        }`}
+                      >
+                        <BookCover
+                          title={title || '本のタイトル'}
+                          author={author || '著者名'}
+                          coverUrl={coverUrl}
+                          className="w-28 h-40 shadow-md mb-3"
+                        />
+
+                        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-900 bg-amber-100/80 border border-amber-300/70 px-3 py-1.5 rounded-lg">
+                          {coverUrl ? (
+                            <>
+                              <Upload className="w-3.5 h-3.5 text-amber-800" />
+                              <span>写真を変更する</span>
+                            </>
+                          ) : (
+                            <>
+                              <ImagePlus className="w-3.5 h-3.5 text-amber-800" />
+                              <span>表紙写真を選択</span>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-stone-500 mt-1.5 leading-snug">
+                          クリックまたはドラッグ＆ドロップ
+                          <br />
+                          （スマホ撮影・アルバム対応）
+                        </p>
+                      </div>
+
+                      {coverUrl && (
+                        <button
+                          type="button"
+                          onClick={handleClearImage}
+                          className="mt-2 inline-flex items-center gap-1 text-xs text-rose-700 hover:text-rose-900 px-2.5 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>表紙画像を削除して戻す</span>
+                        </button>
+                      )}
+
+                      {imageError && (
+                        <p className="text-xs text-rose-600 mt-1.5 text-center">{imageError}</p>
+                      )}
+                    </div>
+
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                          タイトル <span className="text-rose-600">*必須</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={title}
+                          onChange={(e) => {
+                            setTitle(e.target.value);
+                            if (titleError) setTitleError('');
+                          }}
+                          placeholder="例: 思考の整理学"
+                          className="w-full rounded-lg border border-stone-300 bg-stone-50/50 px-3.5 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:outline-none"
+                        />
+                        {titleError && <p className="text-xs text-rose-600 mt-1">{titleError}</p>}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            著者名
+                          </label>
+                          <input
+                            type="text"
+                            value={author}
+                            onChange={(e) => setAuthor(e.target.value)}
+                            placeholder="例: 外山 滋比古"
+                            className="w-full rounded-lg border border-stone-300 bg-stone-50/50 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            出版日
+                          </label>
+                          <input
+                            type="text"
+                            value={publishedDate}
+                            onChange={(e) => setPublishedDate(e.target.value)}
+                            placeholder="例: 1986-04 または 2024-05-10"
+                            className="w-full rounded-lg border border-stone-300 bg-stone-50/50 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            ページ数
+                          </label>
+                          <input
+                            type="text"
+                            value={pageCount}
+                            onChange={(e) => setPageCount(e.target.value)}
+                            placeholder="例: 256"
+                            className="w-full rounded-lg border border-stone-300 bg-stone-50/50 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            読書ステータス
+                          </label>
+                          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-stone-100 border border-stone-200">
+                            {['読みたい', '読書中', '読了'].map((st) => (
+                              <button
+                                key={st}
+                                type="button"
+                                onClick={() => setStatus(st)}
+                                className={`py-1.5 rounded-md text-xs font-medium transition cursor-pointer ${
+                                  status === st
+                                    ? 'bg-stone-800 text-white shadow-xs'
+                                    : 'text-stone-600 hover:text-stone-900'
+                                }`}
+                              >
+                                {st}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            読んだ日（記録日）
+                          </label>
+                          <input
+                            type="date"
+                            value={readDate}
+                            onChange={(e) => setReadDate(e.target.value)}
+                            className="w-full rounded-lg border border-stone-300 bg-stone-50/50 px-3 py-2 text-sm text-stone-900 focus:border-amber-700 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-700 mb-1">
+                          タグ / カテゴリ（カンマ区切り、または下からクリック選択）
+                        </label>
+                        <input
+                          type="text"
+                          value={tagsInput}
+                          onChange={(e) => setTagsInput(e.target.value)}
+                          placeholder="例: ビジネス, 思考法, エッセイ"
+                          className="w-full rounded-lg border border-stone-300 bg-stone-50/50 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:outline-none"
+                        />
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                          {PRESET_TAGS.map((tag) => {
+                            const active = parsedTags.includes(tag);
+                            return (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => handleTogglePresetTag(tag)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs transition cursor-pointer border ${
+                                  active
+                                    ? 'bg-amber-800 text-white border-amber-800'
+                                    : 'bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-200/70'
+                                }`}
+                              >
+                                {active && <Check className="w-3 h-3" />}
+                                <span>{tag}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* ② 読む前の問い & ③ 本の要約 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <section className="bg-white rounded-xl border border-stone-200/90 p-5 shadow-sm flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-800 text-stone-50 text-xs font-bold">
+                        2
+                      </span>
+                      <HelpCircle className="w-4 h-4 text-amber-700" />
+                      <h3 className="font-serif font-bold text-stone-800 text-sm sm:text-base">
+                        読む前の問い
+                      </h3>
+                    </div>
+                    <p className="text-xs text-stone-500 mb-3">
+                      なぜこの本を読もうと思ったのか、何を持ち帰りたいか
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={preQuestion}
+                      onChange={(e) => setPreQuestion(e.target.value)}
+                      placeholder="現在抱えている課題や、この本から得たいヒントを書き留めておきましょう..."
+                      className="w-full flex-1 rounded-lg border border-stone-300 bg-stone-50/50 p-3 text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-amber-700 focus:bg-white focus:outline-none"
+                    />
+                  </section>
+
+                  <section className="bg-white rounded-xl border border-stone-200/90 p-5 shadow-sm flex flex-col">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-800 text-stone-50 text-xs font-bold">
+                          3
+                        </span>
+                        <FileText className="w-4 h-4 text-amber-700" />
+                        <h3 className="font-serif font-bold text-stone-800 text-sm sm:text-base">
+                          本の要約
+                        </h3>
+                      </div>
+                      <span
+                        className={`text-[11px] font-mono ${
+                          summary.length > 140
+                            ? 'text-amber-700 font-semibold'
+                            : 'text-stone-400'
+                        }`}
+                      >
+                        {summary.length} 文字（目安: 100〜140字）
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 mb-3">
+                      どんなテーマの本なのか、自分の言葉で1〜2行に凝縮してまとめる
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      placeholder="100〜140文字程度で、本書の中心テーマや主張を要約..."
+                      className="w-full flex-1 rounded-lg border border-stone-300 bg-stone-50/50 p-3 text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-amber-700 focus:bg-white focus:outline-none"
+                    />
+                  </section>
+                </div>
+
+                {/* ④ 好きな文章と自分の考え（複数登録リスト形式） */}
+                <section className="bg-white rounded-xl border border-stone-200/90 p-5 sm:p-6 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-800 text-stone-50 text-xs font-bold">
+                        4
+                      </span>
+                      <Quote className="w-4 h-4 text-amber-700" />
+                      <h3 className="font-serif font-bold text-stone-800 text-sm sm:text-base">
+                        好きな文章と自分の考え（引用・考察リスト）
+                      </h3>
+                    </div>
+                    <span className="text-xs text-stone-500">
+                      心に刺さったフレーズと考察を何個でも追加できます
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    {quotes.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-xl border border-stone-200/90 bg-[#FAF8F5]/70 p-4 sm:p-5 space-y-3.5 relative"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100/90 text-amber-900 border border-amber-200">
+                              引用 #{idx + 1}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <label className="text-xs text-stone-600 font-medium">
+                                該当ページ:
+                              </label>
+                              <input
+                                type="text"
+                                value={item.page}
+                                onChange={(e) => handleQuoteChange(idx, 'page', e.target.value)}
+                                placeholder="例: p.45"
+                                className="w-28 rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-xs text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {quotes.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveQuoteSet(idx)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>このセットを削除</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-stone-700 mb-1">
+                            好きな文章（引用）
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={item.quote}
+                            onChange={(e) => handleQuoteChange(idx, 'quote', e.target.value)}
+                            placeholder="心に残った一節を書き写してください（トップ画面の「本日のハイライト」にも連動します）"
+                            className="w-full rounded-lg border border-stone-300 bg-white p-3 font-serif text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-amber-700 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="flex items-center gap-1.5 text-xs font-semibold text-stone-700 mb-1">
+                            <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                            <span>この文章へのメモ・考え（選んだ理由や感じたこと）</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={item.thought}
+                            onChange={(e) => handleQuoteChange(idx, 'thought', e.target.value)}
+                            placeholder="なぜこの文章に惹かれたのか、自身の経験や現在の課題と結びつけた考察..."
+                            className="w-full rounded-lg border border-stone-300 bg-white p-3 text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-amber-700 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddQuoteSet}
+                    className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed border-amber-300 hover:border-amber-600 bg-amber-50/40 hover:bg-amber-50/80 text-amber-900 text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 text-amber-800" />
+                    <span>+ 好きな文章・メモを追加する</span>
+                  </button>
+                </section>
+
+                {/* ⑤ 本全体の感想・総合レビュー & ⑥ 筆者への反論・批判的視点 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <section className="bg-white rounded-xl border border-stone-200/90 p-5 shadow-sm flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-800 text-stone-50 text-xs font-bold">
+                        5
+                      </span>
+                      <MessageSquareQuote className="w-4 h-4 text-amber-700" />
+                      <h3 className="font-serif font-bold text-stone-800 text-sm sm:text-base">
+                        本全体の感想・総合レビュー
+                      </h3>
+                    </div>
+                    <p className="text-xs text-stone-500 mb-3">
+                      個別のフレーズとは別に、本を一冊読み通して感じた総合的な感想・意見・総括
+                    </p>
+                    <textarea
+                      rows={5}
+                      value={overallReview}
+                      onChange={(e) => setOverallReview(e.target.value)}
+                      placeholder="この本全体を通して得た学びや、読み終えたあとの率直な感想・総括を自由に書いてください..."
+                      className="w-full flex-1 rounded-lg border border-stone-300 bg-stone-50/50 p-3 text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-amber-700 focus:bg-white focus:outline-none"
+                    />
+                  </section>
+
+                  <section className="bg-white rounded-xl border border-stone-200/90 p-5 shadow-sm flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-800 text-stone-50 text-xs font-bold">
+                        6
+                      </span>
+                      <Scale className="w-4 h-4 text-indigo-700" />
+                      <h3 className="font-serif font-bold text-stone-800 text-sm sm:text-base">
+                        筆者への反論・批判的視点
+                      </h3>
+                    </div>
+                    <p className="text-xs text-stone-500 mb-3">
+                      「本当にそうか？」「例外や前提条件はないか？」と多角的に問い直したメモ
+                    </p>
+                    <textarea
+                      rows={5}
+                      value={critique}
+                      onChange={(e) => setCritique(e.target.value)}
+                      placeholder="著者の主張を鵜呑みにせず、あえて別の角度や限界・例外を考えるとしたら？"
+                      className="w-full flex-1 rounded-lg border border-stone-300 bg-stone-50/50 p-3 text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-indigo-700 focus:bg-white focus:outline-none"
+                    />
+                  </section>
+                </div>
+
+                {/* ⑦ どう行動を変えるか & ⑧ 行動の振り返り・進捗 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <section className="bg-amber-50/40 rounded-xl border border-amber-200/80 p-5 shadow-sm flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-800 text-amber-50 text-xs font-bold">
+                        7
+                      </span>
+                      <Compass className="w-4 h-4 text-amber-800" />
+                      <h3 className="font-serif font-bold text-stone-900 text-sm sm:text-base">
+                        どう行動を変えるか
+                      </h3>
+                    </div>
+                    <p className="text-xs text-stone-600 mb-3">
+                      いつ、どこで、何をするか（明日から実践できる具体的な行動プラン）
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={actionPlan}
+                      onChange={(e) => setActionPlan(e.target.value)}
+                      placeholder="例: 毎朝9時の始業前に5分間、今日の最重要タスクを1つだけ紙に書き出す"
+                      className="w-full flex-1 rounded-lg border border-amber-300/90 bg-white p-3 text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-amber-700 focus:outline-none"
+                    />
+                  </section>
+
+                  <section className="bg-emerald-50/30 rounded-xl border border-emerald-200/80 p-5 shadow-sm flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-800 text-emerald-50 text-xs font-bold">
+                        8
+                      </span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                      <h3 className="font-serif font-bold text-stone-900 text-sm sm:text-base">
+                        行動の振り返り・進捗
+                      </h3>
+                    </div>
+                    <p className="text-xs text-stone-600 mb-3">
+                      ⑦の行動を実践してみた結果や、自分に起きた変化（後から追記もおすすめ）
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={actionReview}
+                      onChange={(e) => setActionReview(e.target.value)}
+                      placeholder="1週間試してみた結果や、うまくいった点・調整した点を記録..."
+                      className="w-full flex-1 rounded-lg border border-emerald-300/80 bg-white p-3 text-sm text-stone-900 placeholder:text-stone-400 leading-relaxed focus:border-emerald-700 focus:outline-none"
+                    />
+                  </section>
+                </div>
+
+                {/* 任意記入：本質の一言（アコーディオン） */}
+                <section className="bg-white rounded-xl border border-stone-200/90 overflow-hidden shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setIsEssenceOpen(!isEssenceOpen)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-stone-50/80 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Sparkles className="w-4 h-4 text-amber-700" />
+                      <span className="font-serif font-bold text-stone-800 text-sm sm:text-base">
+                        【任意記入】本質の一言
+                      </span>
+                      <span className="text-xs text-stone-500">
+                        — 本書のメッセージを一言（20〜30文字程度）で表すと？
+                      </span>
+                    </div>
+                    {isEssenceOpen ? (
+                      <ChevronUp className="w-4 h-4 text-stone-500" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-stone-500" />
+                    )}
+                  </button>
+
+                  {isEssenceOpen && (
+                    <div className="px-5 pb-5 pt-1 border-t border-stone-100 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-stone-500">
+                        <span>本を閉じたあとも心に残したい「核となる1行」</span>
+                        <span
+                          className={`font-mono ${
+                            essence.length > 35
+                              ? 'text-amber-700 font-semibold'
+                              : 'text-stone-400'
+                          }`}
+                        >
+                          {essence.length} 文字（目安: 20〜30字）
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={essence}
+                        onChange={(e) => setEssence(e.target.value)}
+                        placeholder="例: 思考は詰め込むものではなく、時間をかけて発酵させるもの。"
+                        className="w-full rounded-lg border border-stone-300 bg-stone-50/50 px-3.5 py-2.5 font-serif text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                  )}
+                </section>
+
+                <div className="flex items-center justify-end gap-3 pt-2 border-t border-stone-200">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition cursor-pointer"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl text-sm font-medium bg-stone-900 hover:bg-stone-800 text-amber-50 shadow-sm transition cursor-pointer"
+                  >
+                    {isEditing ? '変更を保存する' : '読書記録を保存する'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
+      /* --- BookDetailModal Component --- */
+      const STATUS_STYLES = {
+        読了: 'bg-emerald-100/90 text-emerald-900 border-emerald-300/80',
+        読書中: 'bg-amber-100/90 text-amber-900 border-amber-300/80',
+        読みたい: 'bg-indigo-100/80 text-indigo-900 border-indigo-300/80'
+      };
+
+      function BookDetailModal({ book: rawBook, onClose, onEdit, onDelete, onQuickUpdate }) {
+        const [confirmDelete, setConfirmDelete] = useState(false);
+        const [quickReview, setQuickReview] = useState('');
+        const [isQuickEditingReview, setIsQuickEditingReview] = useState(false);
+        const [savedToast, setSavedToast] = useState(false);
+
+        const book = rawBook ? normalizeBook(rawBook) : null;
+
+        useEffect(() => {
+          setConfirmDelete(false);
+          setIsQuickEditingReview(false);
+          setQuickReview((rawBook && rawBook.actionReview) || '');
+          setSavedToast(false);
+        }, [rawBook]);
+
+        if (!book) return null;
+
+        const handleQuickReviewSave = () => {
+          if (!onQuickUpdate) return;
+          onQuickUpdate({
+            ...book,
+            actionReview: quickReview.trim(),
+            updatedAt: new Date().toISOString()
+          });
+          setIsQuickEditingReview(false);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 2000);
+        };
+
+        const handleStatusChange = (nextStatus) => {
+          if (!onQuickUpdate || nextStatus === book.status) return;
+          onQuickUpdate({
+            ...book,
+            status: nextStatus,
+            updatedAt: new Date().toISOString()
+          });
+        };
+
+        const quotesList = Array.isArray(book.quotes) ? book.quotes : [];
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="detail-book-title"
+          >
+            <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-[#FAF8F5] border border-stone-200 shadow-2xl overflow-hidden my-auto">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-5 sm:px-7 py-4 bg-white/90 border-b border-stone-200/80">
+                <div className="flex items-center gap-2 text-xs text-stone-500 font-mono tracking-wider uppercase">
+                  <BookOpen className="w-4 h-4 text-amber-700" />
+                  <span>READING NOTEBOOK</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onEdit(book)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-200/90 transition cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>編集</span>
+                  </button>
+
+                  {!confirmDelete ? (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>削除</span>
+                    </button>
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-lg px-2.5 py-1">
+                      <span className="text-xs text-rose-800 font-medium">削除しますか？</span>
+                      <button
+                        type="button"
+                        onClick={() => onDelete(book.id)}
+                        className="px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium cursor-pointer"
+                      >
+                        はい
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(false)}
+                        className="px-2 py-0.5 rounded bg-white text-stone-600 text-xs border border-stone-200 cursor-pointer"
+                      >
+                        取消
+                      </button>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1.5 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition ml-1 cursor-pointer"
+                    aria-label="閉じる"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-y-auto p-5 sm:p-8 space-y-7">
+                {/* ① 本の情報ヘッダー */}
+                <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-stone-200/80">
+                  <div className="mx-auto sm:mx-0">
+                    <BookCover
+                      title={book.title}
+                      author={book.author}
+                      coverUrl={book.coverUrl}
+                      className="w-32 h-44 shadow-md"
+                      size="lg"
+                    />
+                  </div>
+
+                  <div className="flex-1 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border ${
+                          STATUS_STYLES[book.status] || STATUS_STYLES['読了']
+                        }`}
+                      >
+                        {book.status}
+                      </span>
+
+                      <div className="flex items-center gap-1 text-[11px] text-stone-400 ml-auto">
+                        <span>ステータス変更:</span>
+                        {['読みたい', '読書中', '読了'].map((st) => (
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => handleStatusChange(st)}
+                            className={`px-2 py-0.5 rounded border text-[11px] transition cursor-pointer ${
+                              book.status === st
+                                ? 'bg-stone-800 text-white border-stone-800'
+                                : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-100'
+                            }`}
+                          >
+                            {st}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <h1
+                      id="detail-book-title"
+                      className="font-serif text-xl sm:text-2xl font-bold text-stone-900 leading-snug"
+                    >
+                      {book.title}
+                    </h1>
+
+                    <p className="text-sm sm:text-base text-stone-700 font-medium">
+                      {book.author || '著者未設定'}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-stone-500 pt-1">
+                      {book.readDate && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                          記録・読了日:{' '}
+                          <strong className="text-stone-700 font-normal">{book.readDate}</strong>
+                        </span>
+                      )}
+                      {book.publishedDate && (
+                        <span>
+                          出版日:{' '}
+                          <strong className="text-stone-700 font-normal">
+                            {book.publishedDate}
+                          </strong>
+                        </span>
+                      )}
+                      {book.pageCount && (
+                        <span>
+                          ページ数:{' '}
+                          <strong className="text-stone-700 font-normal">{book.pageCount}p</strong>
+                        </span>
+                      )}
+                    </div>
+
+                    {Array.isArray(book.tags) && book.tags.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <Tag className="w-3.5 h-3.5 text-stone-400 mr-0.5" />
+                        {book.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2.5 py-0.5 rounded-full text-xs bg-stone-200/70 text-stone-700 font-medium"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 本質の一言 */}
+                {book.essence && (
+                  <div className="rounded-xl bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-amber-50 p-5 shadow-sm border border-stone-700">
+                    <div className="flex items-center gap-2 text-amber-300/90 text-xs font-mono tracking-wider uppercase mb-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>ESSENCE — 本質の一言</span>
+                    </div>
+                    <p className="font-serif text-base sm:text-lg font-medium tracking-wide leading-relaxed">
+                      {book.essence}
+                    </p>
+                  </div>
+                )}
+
+                {/* ② 読む前の問い & ③ 本の要約 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="rounded-xl bg-white border border-stone-200/90 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-wider mb-2.5">
+                      <HelpCircle className="w-4 h-4 text-amber-700" />
+                      <span>② 読む前の問い（目的・持ち帰りたいこと）</span>
+                    </div>
+                    <p className="text-sm text-stone-800 leading-relaxed whitespace-pre-wrap">
+                      {book.preQuestion || '（未記入）'}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-white border border-stone-200/90 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-wider mb-2.5">
+                      <FileText className="w-4 h-4 text-amber-700" />
+                      <span>③ 本の要約（1〜2行まとめ）</span>
+                    </div>
+                    <p className="text-sm text-stone-800 leading-relaxed whitespace-pre-wrap">
+                      {book.summary || '（未記入）'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ④ 好きな文章と考察セクション（複数セット表示） */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-900 uppercase tracking-wider">
+                      <Quote className="w-4 h-4 text-amber-700" />
+                      <span>④ 好きな文章と自分の考え（全 {quotesList.length} 件）</span>
+                    </div>
+                  </div>
+
+                  {quotesList.length === 0 ? (
+                    <div className="rounded-xl bg-[#FDFBF7] border border-stone-200/80 p-5 text-sm text-stone-400">
+                      （まだ好きな文章と考察が記録されていません）
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {quotesList.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-xl bg-[#FDFBF7] border border-amber-200/80 p-5 sm:p-6 shadow-sm relative overflow-hidden space-y-4"
+                        >
+                          <Quote className="w-20 h-20 text-amber-200/35 absolute -right-2 -bottom-2 pointer-events-none" />
+
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-900">
+                              <span className="w-5 h-5 rounded-full bg-amber-800 text-amber-50 text-[11px] inline-flex items-center justify-center font-mono">
+                                {idx + 1}
+                              </span>
+                              <span>引用フレーズ</span>
+                            </span>
+
+                            {item.page && (
+                              <span className="px-2.5 py-0.5 rounded-md bg-amber-100/90 text-amber-950 font-mono text-xs font-semibold border border-amber-200">
+                                {item.page}
+                              </span>
+                            )}
+                          </div>
+
+                          {item.quote ? (
+                            <blockquote className="pl-4 border-l-4 border-amber-700/70 font-serif font-bold text-base sm:text-lg text-stone-900 leading-relaxed whitespace-pre-wrap">
+                              「{item.quote}」
+                            </blockquote>
+                          ) : (
+                            <p className="text-xs text-stone-400 pl-4">（引用文未記入）</p>
+                          )}
+
+                          {item.thought && (
+                            <div className="relative z-10 rounded-lg bg-white/90 border border-stone-200/80 p-4 space-y-1.5">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-stone-600">
+                                <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                                <span>この文章へのメモ・考え</span>
+                              </div>
+                              <p className="text-sm text-stone-800 leading-relaxed whitespace-pre-wrap">
+                                {item.thought}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ⑤ 本全体の感想セクション */}
+                <div className="rounded-xl bg-white border border-stone-200/90 p-6 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-stone-700 uppercase tracking-wider border-b border-stone-100 pb-2.5">
+                    <MessageSquareQuote className="w-4 h-4 text-amber-700" />
+                    <span>⑤ 本全体の感想・総合レビュー</span>
+                  </div>
+                  <p className="text-sm sm:text-base text-stone-800 leading-relaxed whitespace-pre-wrap">
+                    {book.overallReview || '（未記入）'}
+                  </p>
+                </div>
+
+                {/* ⑥ 筆者への反論・批判的視点 */}
+                <div className="rounded-xl bg-slate-50/70 border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-2.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase tracking-wider">
+                    <Scale className="w-4 h-4 text-indigo-700" />
+                    <span>⑥ 筆者への反論・批判的視点</span>
+                  </div>
+                  <p className="text-sm text-stone-800 leading-relaxed whitespace-pre-wrap">
+                    {book.critique || '（未記入）'}
+                  </p>
+                </div>
+
+                {/* ⑦ どう行動を変えるか & ⑧ 行動の振り返り・進捗 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="rounded-xl bg-amber-50/50 border border-amber-200/90 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-950 uppercase tracking-wider mb-2.5">
+                      <Compass className="w-4 h-4 text-amber-800" />
+                      <span>⑦ どう行動を変えるか（アクションプラン）</span>
+                    </div>
+                    <p className="text-sm text-stone-900 font-medium leading-relaxed whitespace-pre-wrap">
+                      {book.actionPlan || '（未記入）'}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-emerald-50/40 border border-emerald-200/90 p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-950 uppercase tracking-wider">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                          <span>⑧ 行動の振り返り・進捗</span>
+                        </div>
+
+                        {!isQuickEditingReview && (
+                          <button
+                            type="button"
+                            onClick={() => setIsQuickEditingReview(true)}
+                            className="text-xs text-emerald-800 hover:text-emerald-950 underline underline-offset-2 cursor-pointer"
+                          >
+                            進捗を追記する
+                          </button>
+                        )}
+                      </div>
+
+                      {isQuickEditingReview ? (
+                        <div className="space-y-2">
+                          <textarea
+                            rows={3}
+                            value={quickReview}
+                            onChange={(e) => setQuickReview(e.target.value)}
+                            placeholder="行動プランを実践してみた結果や変化をメモ..."
+                            className="w-full rounded-lg border border-emerald-300 bg-white p-2.5 text-sm text-stone-900 focus:border-emerald-700 focus:outline-none"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setQuickReview(book.actionReview || '');
+                                setIsQuickEditingReview(false);
+                              }}
+                              className="px-3 py-1 rounded text-xs text-stone-600 hover:bg-stone-100 cursor-pointer"
+                            >
+                              キャンセル
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleQuickReviewSave}
+                              className="px-3 py-1 rounded text-xs font-medium bg-emerald-800 hover:bg-emerald-900 text-white cursor-pointer"
+                            >
+                              保存する
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-stone-800 leading-relaxed whitespace-pre-wrap">
+                          {book.actionReview ||
+                            '（まだ振り返りが記録されていません。「進捗を追記する」からいつでも記録できます）'}
+                        </p>
+                      )}
+                    </div>
+
+                    {savedToast && (
+                      <div className="mt-2 inline-flex items-center gap-1 text-xs text-emerald-800 font-medium">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>振り返りを保存しました</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      /* --- Main App Component --- */
+      const STATUS_TABS = ['すべて', '読みたい', '読書中', '読了'];
+
+      function App() {
+        const [books, setBooks] = useState(() => {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed.map(normalizeBook).filter(Boolean);
+              }
+            }
+          } catch (e) {}
+          return INITIAL_BOOKS.map(normalizeBook).filter(Boolean);
+        });
+
+        const [searchQuery, setSearchQuery] = useState('');
+        const [statusFilter, setStatusFilter] = useState('すべて');
+        const [selectedTag, setSelectedTag] = useState('すべて');
+
+        const [selectedBookId, setSelectedBookId] = useState(null);
+        const [isFormOpen, setIsFormOpen] = useState(false);
+        const [editingBook, setEditingBook] = useState(null);
+
+        useEffect(() => {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+          } catch (e) {}
+        }, [books]);
+
+        const selectedBook = useMemo(
+          () => books.find((b) => b.id === selectedBookId) || null,
+          [books, selectedBookId]
+        );
+
+        const allTags = useMemo(() => {
+          const set = new Set();
+          books.forEach((b) => {
+            if (Array.isArray(b.tags)) {
+              b.tags.forEach((t) => {
+                if (t && t.trim()) set.add(t.trim());
+              });
+            }
+          });
+          return ['すべて', ...Array.from(set)];
+        }, [books]);
+
+        const statusCounts = useMemo(() => {
+          const counts = { すべて: books.length, 読みたい: 0, 読書中: 0, 読了: 0 };
+          books.forEach((b) => {
+            if (counts[b.status] !== undefined) {
+              counts[b.status] += 1;
+            }
+          });
+          return counts;
+        }, [books]);
+
+        const filteredBooks = useMemo(() => {
+          const q = searchQuery.trim().toLowerCase();
+          return books.filter((book) => {
+            const matchesStatus =
+              statusFilter === 'すべて' || book.status === statusFilter;
+            const matchesTag =
+              selectedTag === 'すべて' ||
+              (Array.isArray(book.tags) && book.tags.includes(selectedTag));
+            const matchesQuery =
+              !q ||
+              (book.title && book.title.toLowerCase().includes(q)) ||
+              (book.author && book.author.toLowerCase().includes(q)) ||
+              (book.summary && book.summary.toLowerCase().includes(q)) ||
+              (book.overallReview && book.overallReview.toLowerCase().includes(q)) ||
+              (book.essence && book.essence.toLowerCase().includes(q)) ||
+              (Array.isArray(book.quotes) &&
+                book.quotes.some(
+                  (item) =>
+                    (item.quote && item.quote.toLowerCase().includes(q)) ||
+                    (item.thought && item.thought.toLowerCase().includes(q))
+                )) ||
+              (Array.isArray(book.tags) &&
+                book.tags.some((t) => t.toLowerCase().includes(q)));
+
+            return matchesStatus && matchesTag && matchesQuery;
+          });
+        }, [books, searchQuery, statusFilter, selectedTag]);
+
+        const handleOpenCreate = () => {
+          setEditingBook(null);
+          setIsFormOpen(true);
+        };
+
+        const handleOpenEdit = (book) => {
+          setSelectedBookId(null);
+          setEditingBook(book);
+          setIsFormOpen(true);
+        };
+
+        const handleSaveBook = (savedBook) => {
+          const normalized = normalizeBook(savedBook);
+          setBooks((prev) => {
+            const exists = prev.some((b) => b.id === normalized.id);
+            if (exists) {
+              return prev.map((b) => (b.id === normalized.id ? normalized : b));
+            }
+            return [normalized, ...prev];
+          });
+          setIsFormOpen(false);
+          setEditingBook(null);
+          setSelectedBookId(normalized.id);
+        };
+
+        const handleQuickUpdate = (updatedBook) => {
+          const normalized = normalizeBook(updatedBook);
+          setBooks((prev) =>
+            prev.map((b) => (b.id === normalized.id ? normalized : b))
+          );
+        };
+
+        const handleDeleteBook = (bookId) => {
+          setBooks((prev) => prev.filter((b) => b.id !== bookId));
+          setSelectedBookId(null);
+        };
+
+        const handleRestoreSamples = () => {
+          setBooks(INITIAL_BOOKS.map(normalizeBook).filter(Boolean));
+          setSearchQuery('');
+          setStatusFilter('すべて');
+          setSelectedTag('すべて');
+        };
+
+        return (
+          <div className="min-h-screen bg-[#F6F4F0] text-stone-800 flex flex-col selection:bg-amber-200/70 selection:text-stone-900">
+            {/* Header */}
+            <header className="sticky top-0 z-30 bg-[#F6F4F0]/90 backdrop-blur-md border-b border-stone-200/80">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 py-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-stone-900 text-amber-100 flex items-center justify-center shadow-sm">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 tracking-tight">
+                        私の読書記録
+                      </h1>
+                      <span className="hidden sm:inline-block text-[11px] font-mono uppercase tracking-widest text-stone-400">
+                        My Reading Log
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 hidden sm:block">
+                      知識のインプットを、多角的な思考と具体的な行動定着へつなげる読書ノート
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleOpenCreate}
+                  className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-50 text-xs sm:text-sm font-medium shadow-sm transition cursor-pointer active:scale-95 shrink-0"
+                >
+                  <Plus className="w-4 h-4 text-amber-300" />
+                  <span>+ 新しい本を記録する</span>
+                </button>
+              </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-7">
+              <DailyHighlight
+                books={books}
+                onSelectBook={(book) => setSelectedBookId(book.id)}
+              />
+
+              {/* Search & Filter Bar */}
+              <section
+                aria-label="検索とフィルター"
+                className="mb-7 rounded-2xl bg-white/90 border border-stone-200/90 p-4 sm:p-5 shadow-sm space-y-4"
+              >
+                <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="タイトル・著者名・好きな文章・感想キーワードで検索..."
+                      className="w-full pl-10 pr-9 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:outline-none transition"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-700 cursor-pointer"
+                        aria-label="検索クリア"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 p-1 rounded-xl bg-stone-100 border border-stone-200/80 overflow-x-auto">
+                    {STATUS_TABS.map((tab) => {
+                      const active = statusFilter === tab;
+                      return (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setStatusFilter(tab)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition cursor-pointer ${
+                            active
+                              ? 'bg-stone-900 text-amber-50 shadow-xs'
+                              : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                          }`}
+                        >
+                          <span>{tab}</span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                              active
+                                ? 'bg-stone-700 text-amber-200'
+                                : 'bg-stone-200/80 text-stone-600'
+                            }`}
+                          >
+                            {statusCounts[tab] ?? 0}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-stone-100">
+                  <span className="inline-flex items-center gap-1 text-xs text-stone-500 mr-1">
+                    <Tag className="w-3.5 h-3.5 text-stone-400" />
+                    カテゴリ:
+                  </span>
+                  {allTags.map((tag) => {
+                    const active = selectedTag === tag;
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setSelectedTag(tag)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition cursor-pointer border ${
+                          active
+                            ? 'bg-amber-800 text-white border-amber-800 shadow-xs'
+                            : 'bg-stone-50 text-stone-600 border-stone-200/90 hover:bg-stone-100'
+                        }`}
+                      >
+                        {tag === 'すべて' ? 'すべて' : `#${tag}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* Book Cards Grid */}
+              {filteredBooks.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-stone-300 bg-white/60 p-12 text-center space-y-4">
+                  <BookOpen className="w-10 h-10 text-stone-400 mx-auto" />
+                  <div className="space-y-1">
+                    <h3 className="font-serif text-lg font-bold text-stone-800">
+                      該当する読書記録が見つかりませんでした
+                    </h3>
+                    <p className="text-xs sm:text-sm text-stone-500">
+                      検索条件やフィルターを変更するか、新しい本を記録してみてください。
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    {(searchQuery ||
+                      statusFilter !== 'すべて' ||
+                      selectedTag !== 'すべて') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setStatusFilter('すべて');
+                          setSelectedTag('すべて');
+                        }}
+                        className="px-4 py-2 rounded-xl text-xs font-medium bg-stone-200/80 hover:bg-stone-300/80 text-stone-800 transition cursor-pointer"
+                      >
+                        フィルターをリセット
+                      </button>
+                    )}
+                    {books.length === 0 && (
+                      <button
+                        type="button"
+                        onClick={handleRestoreSamples}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-amber-100 hover:bg-amber-200 text-amber-900 transition cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>サンプル読書記録を復元する</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {filteredBooks.map((book) => {
+                    const quoteCount = Array.isArray(book.quotes) ? book.quotes.length : 0;
+                    return (
+                      <article
+                        key={book.id}
+                        onClick={() => setSelectedBookId(book.id)}
+                        className="group relative rounded-2xl bg-white border border-stone-200/90 hover:border-amber-700/40 p-5 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                      >
+                        <div className="flex gap-4">
+                          <BookCover
+                            title={book.title}
+                            author={book.author}
+                            coverUrl={book.coverUrl}
+                            className="w-24 h-36 group-hover:scale-[1.02] transition-transform"
+                          />
+
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                    STATUS_STYLES[book.status] || STATUS_STYLES['読了']
+                                  }`}
+                                >
+                                  {book.status}
+                                </span>
+                                {quoteCount > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-900 border border-amber-200/70">
+                                    <Quote className="w-2.5 h-2.5 text-amber-700" />
+                                    引用 {quoteCount}
+                                  </span>
+                                )}
+                              </div>
+
+                              {book.readDate && (
+                                <span className="inline-flex items-center gap-1 text-[11px] text-stone-400 font-mono">
+                                  <Calendar className="w-3 h-3" />
+                                  {book.readDate}
+                                </span>
+                              )}
+                            </div>
+
+                            <h2 className="font-serif text-base sm:text-lg font-bold text-stone-900 group-hover:text-amber-900 transition-colors line-clamp-2 leading-snug">
+                              {book.title}
+                            </h2>
+
+                            <p className="text-xs text-stone-500 truncate">
+                              {book.author || '著者未設定'}
+                            </p>
+
+                            {Array.isArray(book.tags) && book.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pt-0.5">
+                                {book.tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="px-2 py-0.5 rounded-md text-[11px] bg-stone-100 text-stone-600 border border-stone-200/60"
+                                  >
+                                    #{tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3.5 border-t border-stone-100 space-y-2.5">
+                          <p className="text-xs sm:text-sm text-stone-600 line-clamp-2 leading-relaxed">
+                            {book.summary ||
+                              book.overallReview ||
+                              book.preQuestion ||
+                              '（要約未記入 — クリックして読書ノートを編集・閲覧）'}
+                          </p>
+
+                          {(book.essence || book.actionPlan) && (
+                            <div className="rounded-lg bg-[#FAF8F5] border border-stone-200/70 px-3 py-2 flex items-start gap-2">
+                              {book.essence ? (
+                                <>
+                                  <Sparkles className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
+                                  <p className="text-xs font-serif text-stone-800 line-clamp-1">
+                                    <span className="text-stone-400 font-sans mr-1">本質:</span>
+                                    {book.essence}
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <Compass className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
+                                  <p className="text-xs text-stone-700 line-clamp-1">
+                                    <span className="text-stone-400 mr-1">行動:</span>
+                                    {book.actionPlan}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </main>
+
+            <footer className="mt-12 border-t border-stone-200/80 bg-[#F2EFE9] py-6 text-center text-xs text-stone-500">
+              <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <p className="font-serif text-stone-600">私の読書記録 — My Reading Log</p>
+                <p className="text-[11px] text-stone-400">
+                  すべての記録はお使いのブラウザ（localStorage）に自動保存されます
+                </p>
+              </div>
+            </footer>
+
+            <BookDetailModal
+              book={selectedBook}
+              onClose={() => setSelectedBookId(null)}
+              onEdit={handleOpenEdit}
+              onDelete={handleDeleteBook}
+              onQuickUpdate={handleQuickUpdate}
+            />
+
+            <BookFormModal
+              isOpen={isFormOpen}
+              onClose={() => {
+                setIsFormOpen(false);
+                setEditingBook(null);
+              }}
+              onSave={handleSaveBook}
+              initialData={editingBook}
+            />
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
